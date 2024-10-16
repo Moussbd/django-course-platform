@@ -102,6 +102,7 @@ class Lesson(models.Model):
                             null=True, 
                             resource_type="video"
                             )
+    order = models.IntegerField(default=0)
     preview = models.BooleanField(default=False, 
                                   help_text="if users don't have access to course, can they ses this"
                                   )
@@ -109,4 +110,8 @@ class Lesson(models.Model):
                               choices=PublishStatus.choices, 
                               default=PublishStatus.PUBLISHED
                               )
+    
+
+    class Meta:
+        ordering = ['order']
     
