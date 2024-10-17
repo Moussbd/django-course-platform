@@ -22,8 +22,19 @@ def handle_upload(instance, filename):
     return f"{filename}"    
 
 
+def generate_public_id(instance, *args, **kwargs):
+    title = instance.title 
+    unique_id = str(uuid.uuid4()).replace("-", "")
+    if not title:
+        return unique_id
+    slug = slugify(title)
+    unique_id_short = str(uuid.uuid4()).replace("-", "")[:5]
+
+    return f"courses/{slug}-{unique_id_short}"
+
+
+
 def get_public_id_prefix(instance, *args, **kwargs):
-    print(args,kwargs)
     title = instance.title 
     unique_id = str(uuid.uuid4()).replace("-", "")[:5]
     if title:
@@ -45,6 +56,7 @@ def get_display_name(instance, *args, **kwargs):
 class Course(models.Model):
     title = models.CharField(max_length=120)
     description = models.TextField(blank=True, null=True)
+    public_id = models.CharField(max_length=130, blank=True, null=True)
     # image = models.ImageField(upload_to=handle_upload, blank=True, null=True)
     image = CloudinaryField(
                             "image", 
@@ -63,6 +75,15 @@ class Course(models.Model):
                               )
     timestamp = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+
+
+    def save(self, *args, kwargs):
+        #before save
+        if self.public_id == "" and self.public_id is None:
+            self.public_id = generate_public_id(self)
+        super().save(*args, **kwargs)
+        #after save
+
     
 
     @property
