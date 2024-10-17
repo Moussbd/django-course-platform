@@ -1,5 +1,7 @@
+import uuid
 import helpers
 from django.db import models
+from django.utils.text import slugify
 from cloudinary.models import CloudinaryField
 
 helpers.cloudinary_init()
@@ -19,11 +21,38 @@ class PublishStatus(models.TextChoices):
 def handle_upload(instance, filename):
     return f"{filename}"    
 
+
+def get_public_id_prefix(instance, *args, **kwargs):
+    print(args,kwargs)
+    title = instance.title 
+    unique_id = str(uuid.uuid4()).replace("-", "")[:5]
+    if title:
+        slug = slugify(title)
+        return f"courses/{slug}-{unique_id}"
+   
+
+
+def get_display_name(instance, *args, **kwargs):
+    print(args,kwargs)
+    title = instance.title 
+    if title:
+        return title
+    return "Course Upload"
+   
+
+
+
 class Course(models.Model):
     title = models.CharField(max_length=120)
     description = models.TextField(blank=True, null=True)
     # image = models.ImageField(upload_to=handle_upload, blank=True, null=True)
-    image = CloudinaryField("image", null=True)
+    image = CloudinaryField(
+                            "image", 
+                            null=True,
+                            public_id_prefix=get_public_id_prefix,
+                            display_name=get_display_name,
+                            tags=['course', 'thumbnail']
+                            )
     access = models.CharField(max_length=5, 
                               choices=AccessRequirement.choices, 
                               default=AccessRequirement.EMAIL_REQUIRED
@@ -32,6 +61,8 @@ class Course(models.Model):
                               choices=PublishStatus.choices, 
                               default=PublishStatus.DRAFT
                               )
+    timestamp = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
     
 
     @property
@@ -110,8 +141,10 @@ class Lesson(models.Model):
                               choices=PublishStatus.choices, 
                               default=PublishStatus.PUBLISHED
                               )
+    timestamp = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
     
 
     class Meta:
-        ordering = ['order']
+        ordering = ['order', '-updated']
     
