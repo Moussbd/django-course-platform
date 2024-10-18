@@ -7,7 +7,7 @@ from .models import Course, Lesson
 class LessonInline(admin.StackedInline):
     model = Lesson
     extra = 0
-    readonly_fields = ['updated']
+    readonly_fields = ['public_id', 'updated']
 
 
 
@@ -16,14 +16,14 @@ class CourseAdmin(admin.ModelAdmin):
     inlines = [LessonInline]
     list_display = ['title', 'status', 'access']
     list_filter = ['status', 'access']
-    fields = ['title', 'description', 'status', 'image', 'access', 'display_image']
-    readonly_fields = ['display_image']
+    fields = ['title', 'description', 'public_id', 'status', 'image', 'access', 'display_image']
+    readonly_fields = ['public_id', 'display_image']
 
 
     def display_image(self, obj, *args, **kwargs):
         url = obj.image_admin_url
         cloudinary_id = str(obj.image) 
-        cloudinary_html1 = obj.image.image(width=200)
+        #cloudinary_html1 = obj.image.image(width=200)
         cloudinary_html2 = CloudinaryImage(cloudinary_id).image(width=500)
         return format_html(f"<img src={url} />")
     
